@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Planning optimisé — POC</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; color: #222; }
+  h1 { font-size: 20px; }
+  select, button { font-size: 15px; padding: 8px 12px; margin-right: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+  th { background: #f5f5f5; }
+  #summary { margin-top: 16px; font-size: 14px; color: #555; }
+  #error { color: #b00020; margin-top: 12px; }
+</style>
+</head>
+<body>
+  <h1>POC — Planning optimisé de consultations</h1>
+  <label for="jour">Jour à optimiser :</label>
+  <select id="jour">
+    <option value="lundi">Lundi</option>
+    <option value="mardi" selected>Mardi</option>
+    <option value="mercredi">Mercredi</option>
+    <option value="jeudi">Jeudi</option>
+    <option value="vendredi">Vendredi</option>
+  </select>
+  <button onclick="optimiser()">Optimiser</button>
+
+  <div id="error"></div>
+  <table id="resultat" style="display:none">
+    <thead>
+      <tr><th>Patient</th><th>Lieu</th><th>Arrivée</th><th>Départ</th><th>Trajet depuis précédent</th></tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div id="summary"></div>
+
+<script>
+async function optimiser() {
+  const jour = document.getElementById('jour').value;
+  const errorEl = document.getElementById('error');
+  const table = document.getElementById('resultat');
+  const tbody = document.getElementById('tbody');
+  const summary = document.getElementById('summary');
+  errorEl.textContent = '';
+  table.style.display = 'none';
+  summary.textContent = 'Calcul en cours...';
+
+  try {
+    const res = await fetch(`/optimize/${jour}`, { method: 'POST' });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Erreur inconnue');
+    }
+    const data = await res.json();
+    tbody.innerHTML = '';
+    data.etapes.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${e.patient_nom}</td><td>${e.lieu_nom}</td><td>${e.arrivee}</td><td>${e.depart}</td><td>${e.trajet_depuis_precedent_minutes} min</td>`;
+      tbody.appendChild(tr);
+    });
+    table.style.display = 'table';
+    summary.textContent = `Total trajets : ${data.duree_trajet_totale_minutes} min — ${data.distance_totale_km} km`;
+  } catch (e) {
+    errorEl.textContent = e.message;
+    summary.textContent = '';
+  }
+}
+</script>
+</form>
+<hr style="margin: 40px 0;">
+
+<h3>Ajouter un nouveau patient / consultation</h3>
+<form action="/ajouter_patient" method="POST" style="display: grid; gap: 10px; max-width: 500px;">
+    <div>
+        <label>Nom du patient :</label><br>
+        <input type="text" name="nom" required style="width: 100%;">
+    </div>
+    <div>
+        <label>Prénom du patient :</label><br>
+        <input type="text" name="prenom" style="width: 100%;">
+    </div>
+    <div>
+        <label>Nom du lieu (ex: École Jean Jaurès ou Cabinet) :</label><br>
+        <input type="text" name="nom_lieu" required style="width: 100%;">
+    </div>
+    <div>
+        <label>Type de lieu :</label><br>
+        <select name="type_lieu" style="width: 100%;">
+            <option value="ecole">École</option>
+            <option value="cabinet">Cabinet</option>
+        </select>
+    </div>
+    <div>
+        <label>Adresse postale complète :</label><br>
+        <input type="text" name="adresse" required style="width: 100%;">
+    </div>
+    <div>
+        <label>Jour de la semaine :</label><br>
+        <select name="jour_semaine" style="width: 100%;">
+            <option value="lundi">Lundi</option>
+            <option value="mardi">Mardi</option>
+            <option value="mercredi">Mercredi</option>
+            <option value="jeudi">Jeudi</option>
+            <option value="vendredi">Vendredi</option>
+        </select>
+    </div>
+    <div>
+        <label>Parité de semaine :</label><br>
+        <select name="parite_semaine" style="width: 100%;">
+            <option value="A">Semaine Paire (A)</option>
+            <option value="B">Semaine Impaire (B)</option>
+            <option value="AB">Les deux (A & B)</option>
+        </select>
+    </div>
+    <div>
+        <label>Type de prestation (ID) :</label><br>
+        <input type="text" name="type_prestation_id" value="consultation_standard" required style="width: 100%;">
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label>Fenêtre début (ex: 09:00) :</label><br>
+            <input type="time" name="fenetre_debut" required style="width: 100%;">
+        </div>
+        <div style="flex: 1;">
+            <label>Fenêtre fin (ex: 12:00) :</label><br>
+            <input type="time" name="fenetre_fin" required style="width: 100%;">
+        </div>
+    </div>
+    <div>
+        <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">Enregistrer le patient</button>
+    </div>
+</form>
+</body>
+</html>
