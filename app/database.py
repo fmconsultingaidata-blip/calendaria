@@ -1,12 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# SQLite pour aller vite en POC. À remplacer par une URL Postgres
-# (postgresql://user:pass@host/db) quand on passera en prod ;
-# le schéma SQLAlchemy ci-dessous reste compatible.
-DATABASE_URL = "sqlite:///./poc_planning.db"
+# URL de votre base de données Supabase PostgreSQL
+DATABASE_URL = "postgresql://postgres.puaqtxuwoqwaozzgkcqo:Automatiserclavie@1998@aws-0-eu-west-2.pooler.supabase.com:6543/postgres"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# Note : connect_args a été retiré car il est spécifique à SQLite
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
