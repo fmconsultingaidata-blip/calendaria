@@ -311,11 +311,32 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
                     })
                 min_mat_j, km_mat_j = get_distance_matrix(lieux_jour_calc)
 
+                # ==========================================
+                # 📊 CALCUL ET AFFICHAGE DU SCORECARD DU JOUR
+                # ==========================================
+                total_km_jour = 0.0
+                total_min_jour = 0
+                if min_mat_j and km_mat_j and len(km_mat_j) > 1:
+                    for idx_r in range(len(rdvs)):
+                        if idx_r + 1 < len(km_mat_j):
+                            total_km_jour += km_mat_j[idx_r][idx_r + 1]
+                            total_min_jour += int(min_mat_j[idx_r][idx_r + 1])
+
+                # Affichage de la métrique compacte dans Streamlit
+                str_lit.metric(
+                    label="🚗 Route", 
+                    value=f"{total_km_jour:.1f} km", 
+                    delta=f"~{total_min_jour} min"
+                )
+                str_lit.markdown("---")
+                # ==========================================
+
                 debut_j_m = 9 * 60
                 fin_j_m = (18 * 60 + 30) if jour != "vendredi" else (12 * 60 + 30)
                 reprise_midi_m = 13 * 60 + 30
 
                 elements_journee = []
+           
 
                 def ajouter_trous_libres(d_m, f_m):
                     if d_m < reprise_midi_m and f_m > 9 * 60:
