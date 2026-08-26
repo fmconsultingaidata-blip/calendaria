@@ -625,16 +625,17 @@ elif menu == "🔍 Page de Diagnostic Avancé":
         with col_g:
             str_lit.subheader("🛠️ Ajustement des horaires du test")
             
-            if "diag_deb" not in str_lit.session_state:
-                str_lit.session_state.diag_deb = p_data.get("deb_defaut", "09:45")
-            if "diag_fin" not in str_lit.session_state:
-                str_lit.session_state.diag_fin = p_data.get("fin_defaut", "10:30")
+            patient_fingerprint = (
+                p_data.get("nom"), p_data.get("prenom"), p_data.get("jour"),
+                p_data.get("parite"), p_data.get("deb_defaut"), p_data.get("fin_defaut"),
+            )
+            if str_lit.session_state.get("_diag_synced_for") != patient_fingerprint:
+                str_lit.session_state["input_diag_deb"] = p_data.get("deb_defaut", "09:45")
+                str_lit.session_state["input_diag_fin"] = p_data.get("fin_defaut", "10:30")
+                str_lit.session_state["_diag_synced_for"] = patient_fingerprint
 
-            fenetre_debut_str = str_lit.text_input("Fenêtre début test (HH:MM)", value=str_lit.session_state.diag_deb, key="input_diag_deb")
-            fenetre_fin_str = str_lit.text_input("Fenêtre fin test (HH:MM)", value=str_lit.session_state.diag_fin, key="input_diag_fin")
-            
-            str_lit.session_state.diag_deb = fenetre_debut_str
-            str_lit.session_state.diag_fin = fenetre_fin_str
+            fenetre_debut_str = str_lit.text_input("Fenêtre début test (HH:MM)", key="input_diag_deb")
+            fenetre_fin_str = str_lit.text_input("Fenêtre fin test (HH:MM)", key="input_diag_fin")
             
             str_lit.markdown(
                 "<p style='color:red; font-size:0.85em;'>⚠️ Règle de sécurité : Un délai de 10 minutes d'avance/marge de trajet est habituellement préconisé entre deux rendez-vous de lieux différents.</p>", 
@@ -680,7 +681,7 @@ elif menu == "🔍 Page de Diagnostic Avancé":
                 nom_p_prec = f"{rdv_prec.patient.prenom} {rdv_prec.patient.nom}" if (rdv_prec and rdv_prec.patient) else "RDV"
                 nom_l_prec = rdv_prec.lieu.nom if (rdv_prec and rdv_prec.lieu) else "Lieu"
                 adr_l_prec = rdv_prec.lieu.adresse if (rdv_prec and rdv_prec.lieu) else ""
-                h_deb_prec = rdv_prec.fenetre_debut.strftime('%H:%M') if rdv_prec else ""
+                h_fin_prec = rdv_prec.fenetre_fin.strftime('%H:%M') if rdv_prec else ""
                 
                 t_trajet_av = int(min_mat_test[insertion_idx][insertion_idx + 1]) if min_mat_test else 0
                 distance_km_prec = km_mat_test[insertion_idx][insertion_idx + 1] if km_mat_test else 1
@@ -693,11 +694,11 @@ elif menu == "🔍 Page de Diagnostic Avancé":
                 if t_trajet_av > dispo_max_av:
                     if not meme_lieu_precedent:
                         faisable = False
-                        message_diagnostic.append(f"❌ **Trop serré avec le RDV précédent** : Patient **{nom_p_prec}** à *{nom_l_prec}* ({adr_l_prec}) débutant à **{h_deb_prec}** | Trajet estimé : **{t_trajet_av} min** (max dispo : {dispo_max_av} min avec marges).")
+                        message_diagnostic.append(f"❌ **Trop serré avec le RDV précédent** : Patient **{nom_p_prec}** à *{nom_l_prec}* ({adr_l_prec}) finissant à **{h_fin_prec}** | Trajet estimé : **{t_trajet_av} min** (max dispo : {dispo_max_av} min avec marges).")
                     else:
                         message_diagnostic.append(f"⚠️ **Même lieu détecté** : Trajet de 0 min avec **{nom_p_prec}**. La règle de marge de 10 min a été ignorée (physiquement faisable).")
                 else:
-                    message_diagnostic.append(f"✅ Trajet amont compatible depuis **{nom_p_prec}** (*{nom_l_prec}* - {adr_l_prec}) débutant à **{h_deb_prec}** : **{t_trajet_av} min**.")
+                    message_diagnostic.append(f"✅ Trajet amont compatible depuis **{nom_p_prec}** (*{nom_l_prec}* - {adr_l_prec}) finissant à **{h_fin_prec}** : **{t_trajet_av} min**.")
 
             if insertion_idx < len(rdvs_actuels):
                 rdv_suiv = rdvs_actuels[insertion_idx]
@@ -887,10 +888,13 @@ elif menu == "🔍 Page de Diagnostic Avancé":
                         """, unsafe_allow_html=True)
                     with col_s2:
                         if str_lit.button("Sélectionner", key=f"btn_choix_trou_{idx_tr}"):
-                            str_lit.session_state.diag_deb = minutes_to_time_str(trou['debut'])
-                            str_lit.session_state.diag_fin = minutes_to_time_str(trou['debut'] + 45)
-                            # Si on sélectionne un créneau d'une autre semaine via la liste, on met aussi à jour la parité du patient si besoin
+                            str_lit.session_state["input_diag_deb"] = minutes_to_time_str(trou['debut'])
+                            str_lit.session_state["input_diag_fin"] = minutes_to_time_str(trou['debut'] + 45)
                             p_data["parite"] = parite_visualisee
+                            str_lit.session_state["_diag_synced_for"] = (
+                                p_data.get("nom"), p_data.get("prenom"), p_data.get("jour"),
+                                p_data.get("parite"), p_data.get("deb_defaut"), p_data.get("fin_defaut"),
+                            )
                             str_lit.success(f"Créneau sélectionné pour le {j_sugg.capitalize()} en Semaine {parite_visualisee} !")
                             str_lit.rerun()
             else:
