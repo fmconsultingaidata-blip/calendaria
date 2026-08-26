@@ -156,7 +156,7 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
         else:
             rdvs_form_jour = sorted(rdvs_tous_form_jour, key=lambda x: x.fenetre_debut)
         
-        debut_j_form = 9 * 60
+        debut_j_form = 8 * 60
         fin_j_form = (18 * 60 + 30) if jour_semaine != "vendredi" else (12 * 60 + 30)
         reprise_midi_form = 13 * 60 + 30
         
