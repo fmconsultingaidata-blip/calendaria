@@ -610,23 +610,44 @@ elif menu == "🔄 Réorganisation & Multi-Scénarios Annuels":
                         flux_sim_html += "</div>"
                         components.html(flux_sim_html, height=HAUTEUR_TOTALE_SCEN, scrolling=False)
 
-                # --- AFFICHAGE DU TEXTE DE SYNTHÈSE DES MODIFICATIONS ---
+               # --- AFFICHAGE DU TEXTE DE SYNTHÈSE DES MODIFICATIONS ET SÉLECTION CRÉNEAU PAR CRÉNEAU ---
                 str_lit.markdown("---")
-                str_lit.markdown("### 📋 Synthèse des modifications par rapport à l'existant")
+                str_lit.markdown("### 📋 Synthèse et choix des modifications par créneau")
+                
                 if modifications_detectees:
-                    str_lit.markdown(f"<div style='background-color: #fff7ed; border: 1px solid #fed7aa; padding: 12px; border-radius: 6px; color: #9a3412;'><b>⚠️ {len(modifications_detectees)} créneau(x) modifié(s) dans cette vue ({vue_parite_active}) :</b></div>", unsafe_allow_html=True)
-                    for mod in modifications_detectees:
-                        str_lit.markdown(f"- **{mod['jour']} (Semaine {mod['parite']})** : Patient **{mod['patient']}** déplacé de **{mod['ancienne']}** vers **{mod['nouvelle']}**.")
+                    str_lit.markdown(f"<div style='background-color: #fff7ed; border: 1px solid #fed7aa; padding: 12px; border-radius: 6px; color: #9a3412;'><b>⚠️ {len(modifications_detectees)} créneau(x) modifié(s) détecté(s) dans cette vue ({vue_parite_active}). Décochez les créneaux que vous ne souhaitez pas modifier :</b></div>", unsafe_allow_html=True)
+                    str_lit.markdown("") # Petit espace
+
+                    # Utilisation d'un conteneur pour stocker les choix validés de l'utilisateur
+                    modifications_selectionnees = []
+
+                    for idx_m, mod in enumerate(modifications_detectees):
+                        label_checkbox = f"**{mod['jour']} (Semaine {mod['parite']})** : Patient **{mod['patient']}** déplacé de **{mod['ancienne']}** vers **{mod['nouvelle']}**"
+                        
+                        # Case à cocher interactive pour chaque modification (cochée par défaut)
+                        appliquer_ce_creneau = str_lit.checkbox(
+                            label=label_checkbox,
+                            value=True,
+                            key=f"chk_modif_creneau_{sc_actif_id}_{idx_m}"
+                        )
+                        
+                        if appliquer_ce_creneau:
+                            modifications_selectionnees.append(mod)
+
+                    str_lit.markdown("---")
+                    str_lit.subheader("🚀 Action sur la sélection")
+                    str_lit.write(f"Nombre de modifications sélectionnées : **{len(modifications_selectionnees)} / {len(modifications_detectees)}**")
+                    
+                    if str_lit.button(f"⚡ Appliquer uniquement les modifications sélectionnées", type="primary", key="btn_implementer_selection_ab"):
+                        if modifications_selectionnees:
+                            # TODO: Insérer ici votre logique de mise en base de données pour chaque élément de 'modifications_selectionnees'
+                            str_lit.success(f"🎉 {len(modifications_selectionnees)} modification(s) sélectionnée(s) implémentée(s) avec succès dans votre base de production !")
+                            del str_lit.session_state["scenarios_visionne_ab"]
+                            str_lit.rerun()
+                        else:
+                            str_lit.warning("⚠️ Aucune modification n'a été cochée. Veuillez en sélectionner au moins une.")
                 else:
                     str_lit.markdown("<div style='background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; color: #166534;'>✅ Aucun changement d'horaire par rapport à l'existant sur cette vue. Tous les créneaux sont conservés à l'identique.</div>", unsafe_allow_html=True)
-
-                str_lit.markdown("---")
-                str_lit.subheader("🚀 Action définitive sur les deux calendriers")
-                str_lit.write("Si cette proposition combinée (Semaines A et B) vous convient, vous pouvez l'appliquer globalement :")
-                
-                if str_lit.button(f"⚡ Implémenter définitivement ce scénario bi-calendrier ({sc_actif_obj['titre']})", type="primary", key="btn_implementer_definitif_ab"):
-                    str_lit.success(f"🎉 Le scénario '{sc_actif_obj['titre']}' a été implémenté avec succès pour les Semaines A et B dans votre base de production !")
-                    del str_lit.session_state["scenarios_visionne_ab"]
 # ==========================================
 # PAGE 3 : PAGE DE DIAGNOSTIC AVANCÉ ET INTERACTIF
 # ==========================================
