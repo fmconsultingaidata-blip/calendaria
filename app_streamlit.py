@@ -331,118 +331,112 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
                 str_lit.markdown("---")
                 # ==========================================
 
-               # 1. Définition des bornes (début à 8h30 = 510 minutes)
-        debut_j_m = 8 * 60 + 30 
-        fin_j_m = (18 * 60 + 30) if jour != "vendredi" else (12 * 60 + 30)
-        reprise_midi_m = 13 * 60 + 30
+                debut_j_m = 8 * 60 + 30 # Nouveau début à 8h30 (510 minutes)
+                fin_j_m = (18 * 60 + 30) if jour != "vendredi" else (12 * 60 + 30)
+                reprise_midi_m = 13 * 60 + 30
 
-        # Référence de début pour le positionnement vertical dans le HTML
-        HEURE_DEBUT_REF = debut_j_m  # 510 (correspond à 8h30)
+                elements_journee = []
+           
 
-        elements_journee = []
-
-        def ajouter_trous_libres(d_m, f_m):
-            # CORRIGÉ : On autorise l'affichage dès debut_j_m au lieu de bloquer à 9 * 60
-            if d_m < reprise_midi_m and f_m > debut_j_m:
-                if d_m < reprise_midi_m:
-                    courant_mat = d_m
-                    fin_mat_limit = min(f_m, 12 * 60 + 30)
-                    while courant_mat + 45 <= fin_mat_limit:
+                def ajouter_trous_libres(d_m, f_m):
+                    if d_m < reprise_midi_m and f_m > 9 * 60:
+                        if d_m < reprise_midi_m:
+                            courant_mat = d_m
+                            fin_mat_limit = min(f_m, 12 * 60 + 30)
+                            while courant_mat + 45 <= fin_mat_limit:
+                                elements_journee.append({
+                                    "type": "libre",
+                                    "debut_min": courant_mat,
+                                    "fin_min": courant_mat + 45,
+                                    "duree": 45,
+                                    "texte": f"{minutes_to_time_str(courant_mat)} - {minutes_to_time_str(courant_mat + 45)}"
+                                })
+                                courant_mat += 45
+                        d_m = max(d_m, reprise_midi_m)
+                    
+                    courant = d_m
+                    while courant + 45 <= f_m:
+                        fin_bloc = courant + 45
                         elements_journee.append({
                             "type": "libre",
-                            "debut_min": courant_mat,
-                            "fin_min": courant_mat + 45,
+                            "debut_min": courant,
+                            "fin_min": fin_bloc,
                             "duree": 45,
-                            "texte": f"{minutes_to_time_str(courant_mat)} - {minutes_to_time_str(courant_mat + 45)}"
+                            "texte": f"{minutes_to_time_str(courant)} - {minutes_to_time_str(fin_bloc)}"
                         })
-                        courant_mat += 45
-                d_m = max(d_m, reprise_midi_m)
-            
-            courant = d_m
-            while courant + 45 <= f_m:
-                fin_bloc = courant + 45
-                elements_journee.append({
-                    "type": "libre",
-                    "debut_min": courant,
-                    "fin_min": fin_bloc,
-                    "duree": 45,
-                    "texte": f"{minutes_to_time_str(courant)} - {minutes_to_time_str(fin_bloc)}"
-                })
-                courant = fin_bloc
+                        courant = fin_bloc
 
-        if not rdvs:
-            ajouter_trous_libres(debut_j_m, fin_j_m)
-        else:
-            p_deb = to_minutes(rdvs[0].fenetre_debut)
-            if p_deb > debut_j_m:
-                ajouter_trous_libres(debut_j_m, p_deb)
+                if not rdvs:
+                    ajouter_trous_libres(debut_j_m, fin_j_m)
+                else:
+                    p_deb = to_minutes(rdvs[0].fenetre_debut)
+                    if p_deb > debut_j_m:
+                        ajouter_trous_libres(debut_j_m, p_deb)
 
-            for idx_r, r in enumerate(rdvs):
-                d_m = to_minutes(r.fenetre_debut)
-                f_m = to_minutes(r.fenetre_fin)
-                duree_m = f_m - d_m
-                p_nom = f"{r.patient.prenom} {r.patient.nom}" if r.patient else "Inconnu"
-                l_nom = r.lieu.nom if r.lieu else "Lieu non spécifié"
+                    for idx_r, r in enumerate(rdvs):
+                        d_m = to_minutes(r.fenetre_debut)
+                        f_m = to_minutes(r.fenetre_fin)
+                        duree_m = f_m - d_m
+                        p_nom = f"{r.patient.prenom} {r.patient.nom}" if r.patient else "Inconnu"
+                        l_nom = r.lieu.nom if r.lieu else "Lieu non spécifié"
+                        
+                        trajet_str = ""
+                        if min_mat_j and len(min_mat_j) > idx_r + 1:
+                            t_min_val = int(min_mat_j[idx_r][idx_r + 1])
+                            km_val = km_mat_j[idx_r][idx_r + 1]
+                            trajet_str = f"🚗 Trajet : {km_val:.1f} km (~{t_min_val} min)"
+
+                        elements_journee.append({
+                            "type": "rdv",
+                            "debut_min": d_m,
+                            "fin_min": f_m,
+                            "duree": duree_m,
+                            "texte_horaire": f"{r.fenetre_debut.strftime('%H:%M')} - {r.fenetre_fin.strftime('%H:%M')}",
+                            "patient": p_nom,
+                            "lieu": l_nom,
+                            "parite": r.parite_semaine,
+                            "trajet": trajet_str
+                        })
+
+                        if idx_r < len(rdvs) - 1:
+                            f_act = f_m + 5
+                            d_suiv = to_minutes(rdvs[idx_r + 1].fenetre_debut)
+                            if d_suiv > f_act:
+                                ajouter_trous_libres(f_act, d_suiv)
+
+                    f_der = to_minutes(rdvs[-1].fenetre_fin) + 5
+                    if f_der < fin_j_m:
+                        ajouter_trous_libres(f_der, fin_j_m)
+
+                flux_html = f"<div style='position: relative; height: {HAUTEUR_TOTALE}px; width: 100%; font-family: sans-serif; background-color: #fafafa; border: 1px solid #e5e7eb; border-radius: 4px;'>"
                 
-                trajet_str = ""
-                if min_mat_j and len(min_mat_j) > idx_r + 1:
-                    t_min_val = int(min_mat_j[idx_r][idx_r + 1])
-                    km_val = km_mat_j[idx_r][idx_r + 1]
-                    trajet_str = f"🚗 Trajet : {km_val:.1f} km (~{t_min_val} min)"
+                for h in range(9, 19):
+                    top_h = (h * 60) - HEURE_DEBUT_REF
+                    flux_html += f"<div style='position: absolute; top: {top_h}px; left: 0; right: 0; border-top: 1px dashed #e5e7eb; pointer-events: none;'></div>"
 
-                elements_journee.append({
-                    "type": "rdv",
-                    "debut_min": d_m,
-                    "fin_min": f_m,
-                    "duree": duree_m,
-                    "texte_horaire": f"{r.fenetre_debut.strftime('%H:%M')} - {r.fenetre_fin.strftime('%H:%M')}",
-                    "patient": p_nom,
-                    "lieu": l_nom,
-                    "parite": r.parite_semaine,
-                    "trajet": trajet_str
-                })
-
-                if idx_r < len(rdvs) - 1:
-                    f_act = f_m + 5
-                    d_suiv = to_minutes(rdvs[idx_r + 1].fenetre_debut)
-                    if d_suiv > f_act:
-                        ajouter_trous_libres(f_act, d_suiv)
-
-            f_der = to_minutes(rdvs[-1].fenetre_fin) + 5
-            if f_der < fin_j_m:
-                ajouter_trous_libres(f_der, fin_j_m)
-
-        flux_html = f"<div style='position: relative; height: {HAUTEUR_TOTALE}px; width: 100%; font-family: sans-serif; background-color: #fafafa; border: 1px solid #e5e7eb; border-radius: 4px;'>"
-        
-        # CORRIGÉ : On commence à tracer les lignes horizontales dès 8h (ou 9h, mais en incluant 8h30)
-        for h in range(8, 19):
-            top_h = (h * 60) - HEURE_DEBUT_REF
-            if top_h >= 0:
-                flux_html += f"<div style='position: absolute; top: {top_h}px; left: 0; right: 0; border-top: 1px dashed #e5e7eb; pointer-events: none;'></div>"
-
-        for elem in elements_journee:
-            top_px = elem["debut_min"] - HEURE_DEBUT_REF
-            hauteur_px = elem["duree"]
-            
-            if elem["type"] == "libre":
-                flux_html += f"""
-                <div style="position: absolute; top: {top_px}px; height: {hauteur_px}px; left: 2px; right: 2px; background-color: #ecfdf5; border: 2px dashed #10b981; color: #065f46; border-radius: 4px; padding: 2px; font-size: 10px; text-align: center; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: center; z-index: 2;">
-                    🟢 <b>LIBRE</b><br>{elem['texte']}
-                </div>
-                """
-            elif elem["type"] == "rdv":
-                trajet_html = f"<br><span style='color: #4b5563; font-size: 8px;'>{elem['trajet']}</span>" if elem['trajet'] else ""
-                badge_color = "#3b82f6" if elem['parite'] == "AB" else ("#8b5cf6" if elem['parite'] == "A" else "#ec4899")
-                flux_html += f"""
-                <div style="position: absolute; top: {top_px}px; height: {hauteur_px}px; left: 2px; right: 2px; background-color: #f3f4f6; border-left: 4px solid {badge_color}; border-radius: 4px; padding: 2px 4px; font-size: 9px; line-height: 1.1; box-sizing: border-box; overflow: hidden; z-index: 2;">
-                    <b>{elem['texte_horaire']}</b> <span style="background:{badge_color}; color:white; padding:0px 3px; border-radius:3px;">{elem['parite']}</span><br>
-                    👤 <b>{elem['patient']}</b><br>
-                    🏫 <span style="color: #1d4ed8; font-weight: bold;">{elem['lieu']}</span>
-                    {trajet_html}
-                </div>
-                """
-        flux_html += "</div>"
-        components.html(flux_html, height=HAUTEUR_TOTALE, scrolling=False)
+                for elem in elements_journee:
+                    top_px = elem["debut_min"] - HEURE_DEBUT_REF
+                    hauteur_px = elem["duree"]
+                    
+                    if elem["type"] == "libre":
+                        flux_html += f"""
+                        <div style="position: absolute; top: {top_px}px; height: {hauteur_px}px; left: 2px; right: 2px; background-color: #ecfdf5; border: 2px dashed #10b981; color: #065f46; border-radius: 4px; padding: 2px; font-size: 10px; text-align: center; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: center; z-index: 2;">
+                            🟢 <b>LIBRE</b><br>{elem['texte']}
+                        </div>
+                        """
+                    elif elem["type"] == "rdv":
+                        trajet_html = f"<br><span style='color: #4b5563; font-size: 8px;'>{elem['trajet']}</span>" if elem['trajet'] else ""
+                        badge_color = "#3b82f6" if elem['parite'] == "AB" else ("#8b5cf6" if elem['parite'] == "A" else "#ec4899")
+                        flux_html += f"""
+                        <div style="position: absolute; top: {top_px}px; height: {hauteur_px}px; left: 2px; right: 2px; background-color: #f3f4f6; border-left: 4px solid {badge_color}; border-radius: 4px; padding: 2px 4px; font-size: 9px; line-height: 1.1; box-sizing: border-box; overflow: hidden; z-index: 2;">
+                            <b>{elem['texte_horaire']}</b> <span style="background:{badge_color}; color:white; padding:0px 3px; border-radius:3px;">{elem['parite']}</span><br>
+                            👤 <b>{elem['patient']}</b><br>
+                            🏫 <span style="color: #1d4ed8; font-weight: bold;">{elem['lieu']}</span>
+                            {trajet_html}
+                        </div>
+                        """
+                flux_html += "</div>"
+                components.html(flux_html, height=HAUTEUR_TOTALE, scrolling=False)
 
 # ==========================================
 # PAGE 2 : RÉORGANISATION & MULTI-SCÉNARIOS ANNUELS (CORRIGÉ & COMPLET)
