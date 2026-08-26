@@ -293,7 +293,7 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
         base_adr = base_dep.adresse if base_dep else "30 rue de l'Europe, 44240 La Chapelle-sur-Erdre"
 
         jours_liste = ["lundi", "mardi", "mercredi", "jeudi", "vendredi"]
-        HEURE_DEBUT_REF = 8 * 60
+        HEURE_DEBUT_REF = 9 * 60
 
         for i, jour in enumerate(jours_liste):
             with cols_cal_grid[i]:
@@ -331,7 +331,7 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
                 str_lit.markdown("---")
                 # ==========================================
 
-                debut_j_m = 8 * 60 # Nouveau début à 8h (510 minutes)
+                debut_j_m = 8 * 60 + 30 # Nouveau début à 8h30 (510 minutes)
                 fin_j_m = (18 * 60 + 30) if jour != "vendredi" else (12 * 60 + 30)
                 reprise_midi_m = 13 * 60 + 30
 
