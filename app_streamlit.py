@@ -331,7 +331,7 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
                 str_lit.markdown("---")
                 # ==========================================
 
-                debut_j_m = 8 * 60 + 30 # Nouveau début à 8h30 (510 minutes)
+                debut_j_m = 8 * 60 # Nouveau début à 8h (510 minutes)
                 fin_j_m = (18 * 60 + 30) if jour != "vendredi" else (12 * 60 + 30)
                 reprise_midi_m = 13 * 60 + 30
 
