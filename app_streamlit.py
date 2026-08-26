@@ -629,11 +629,14 @@ elif menu == "🔍 Page de Diagnostic Avancé":
                 p_data.get("nom"), p_data.get("prenom"), p_data.get("jour"),
                 p_data.get("parite"), p_data.get("deb_defaut"), p_data.get("fin_defaut"),
             )
-            if str_lit.session_state.get("_diag_synced_for") != patient_fingerprint:
+            
+            # Si le patient change ou que les clés n'existent pas encore dans la session, on force les valeurs par défaut
+            if str_lit.session_state.get("_diag_synced_for") != patient_fingerprint or "input_diag_deb" not in str_lit.session_state:
                 str_lit.session_state["input_diag_deb"] = p_data.get("deb_defaut", "09:45")
                 str_lit.session_state["input_diag_fin"] = p_data.get("fin_defaut", "10:30")
                 str_lit.session_state["_diag_synced_for"] = patient_fingerprint
 
+            # On récupère les valeurs directement depuis les variables de session initialisées
             fenetre_debut_str = str_lit.text_input("Fenêtre début test (HH:MM)", key="input_diag_deb")
             fenetre_fin_str = str_lit.text_input("Fenêtre fin test (HH:MM)", key="input_diag_fin")
             
