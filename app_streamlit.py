@@ -293,7 +293,7 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
         base_adr = base_dep.adresse if base_dep else "30 rue de l'Europe, 44240 La Chapelle-sur-Erdre"
 
         jours_liste = ["lundi", "mardi", "mercredi", "jeudi", "vendredi"]
-        HEURE_DEBUT_REF = 9 * 60
+        HEURE_DEBUT_REF = 8 * 60 + 30
 
         for i, jour in enumerate(jours_liste):
             with cols_cal_grid[i]:
