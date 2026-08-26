@@ -680,7 +680,7 @@ elif menu == "🔍 Page de Diagnostic Avancé":
                 nom_p_prec = f"{rdv_prec.patient.prenom} {rdv_prec.patient.nom}" if (rdv_prec and rdv_prec.patient) else "RDV"
                 nom_l_prec = rdv_prec.lieu.nom if (rdv_prec and rdv_prec.lieu) else "Lieu"
                 adr_l_prec = rdv_prec.lieu.adresse if (rdv_prec and rdv_prec.lieu) else ""
-                h_deb_prec = rdv_prec.fenetre_debut.strftime('%H:%M') if rdv_prec else ""
+                h_fin_prec = rdv_prec.fenetre_fin.strftime('%H:%M') if rdv_prec else ""
                 
                 t_trajet_av = int(min_mat_test[insertion_idx][insertion_idx + 1]) if min_mat_test else 0
                 distance_km_prec = km_mat_test[insertion_idx][insertion_idx + 1] if km_mat_test else 1
@@ -693,11 +693,11 @@ elif menu == "🔍 Page de Diagnostic Avancé":
                 if t_trajet_av > dispo_max_av:
                     if not meme_lieu_precedent:
                         faisable = False
-                        message_diagnostic.append(f"❌ **Trop serré avec le RDV précédent** : Patient **{nom_p_prec}** à *{nom_l_prec}* ({adr_l_prec}) débutant à **{h_deb_prec}** | Trajet estimé : **{t_trajet_av} min** (max dispo : {dispo_max_av} min avec marges).")
+                        message_diagnostic.append(f"❌ **Trop serré avec le RDV précédent** : Patient **{nom_p_prec}** à *{nom_l_prec}* ({adr_l_prec}) finissant à **{h_fin_prec}** | Trajet estimé : **{t_trajet_av} min** (max dispo : {dispo_max_av} min avec marges).")
                     else:
                         message_diagnostic.append(f"⚠️ **Même lieu détecté** : Trajet de 0 min avec **{nom_p_prec}**. La règle de marge de 10 min a été ignorée (physiquement faisable).")
                 else:
-                    message_diagnostic.append(f"✅ Trajet amont compatible depuis **{nom_p_prec}** (*{nom_l_prec}* - {adr_l_prec}) débutant à **{h_deb_prec}** : **{t_trajet_av} min**.")
+                    message_diagnostic.append(f"✅ Trajet amont compatible depuis **{nom_p_prec}** (*{nom_l_prec}* - {adr_l_prec}) finissant à **{h_fin_prec}** : **{t_trajet_av} min**.")
 
             if insertion_idx < len(rdvs_actuels):
                 rdv_suiv = rdvs_actuels[insertion_idx]
