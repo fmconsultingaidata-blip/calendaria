@@ -643,6 +643,12 @@ elif menu == "🔍 Page de Diagnostic Avancé":
             )
             
         try:
+            # Sécurité : si les champs sont vides, on applique des valeurs par défaut pour éviter le plantage
+            if not fenetre_debut_str.strip():
+                fenetre_debut_str = "09:45"
+            if not fenetre_fin_str.strip():
+                fenetre_fin_str = "10:30"
+
             t_debut_test = time.fromisoformat(fenetre_debut_str)
             t_fin_test = time.fromisoformat(fenetre_fin_str)
             
