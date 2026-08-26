@@ -221,7 +221,14 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
         }
 
         if str_lit.button(label="🔍 Aller au Diagnostic Avancé", key="btn_goToDiag"):
-            str_lit.success("✅ Données enregistrées ! Cliquez sur **🔍 Page de Diagnostic Avancé** dans le menu de gauche.")
+            # Si vous utilisez un menu géré par variable d'état :
+            # str_lit.session_state["menu"] = "Nom_de_votre_page_diagnostic"
+            
+            # OU si vous utilisez le multi-pages natif de Streamlit (dossier pages/) :
+            # str_lit.switch_page("pages/2_Diagnostic.py")
+            
+            str_lit.success("✅ Données enregistrées ! Redirection...")
+            str_lit.rerun()
 
     str_lit.header("📅 Planification, Analyse d'Impact & Calendriers Alternés")
     tab_opt, tab_cal = str_lit.tabs(["🚀 Optimisation & Multi-Scénarios", "🗓️ Vues Calendriers (Semaines A / B)"])
