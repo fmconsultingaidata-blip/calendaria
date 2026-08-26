@@ -629,13 +629,13 @@ elif menu == "🔍 Page de Diagnostic Avancé":
     p_data.get("nom"), p_data.get("prenom"), p_data.get("jour"),
     p_data.get("parite"), p_data.get("deb_defaut"), p_data.get("fin_defaut"),
 )
-if str_lit.session_state.get("_diag_synced_for") != patient_fingerprint:
-    str_lit.session_state["input_diag_deb"] = p_data.get("deb_defaut", "09:45")
-    str_lit.session_state["input_diag_fin"] = p_data.get("fin_defaut", "10:30")
-    str_lit.session_state["_diag_synced_for"] = patient_fingerprint
+	if str_lit.session_state.get("_diag_synced_for") != patient_fingerprint:
+    	str_lit.session_state["input_diag_deb"] = p_data.get("deb_defaut", "09:45")
+    	str_lit.session_state["input_diag_fin"] = p_data.get("fin_defaut", "10:30")
+    	str_lit.session_state["_diag_synced_for"] = patient_fingerprint
 
-fenetre_debut_str = str_lit.text_input("Fenêtre début test (HH:MM)", key="input_diag_deb")
-fenetre_fin_str = str_lit.text_input("Fenêtre fin test (HH:MM)", key="input_diag_fin")
+	fenetre_debut_str = str_lit.text_input("Fenêtre début test (HH:MM)", key="input_diag_deb")
+	fenetre_fin_str = str_lit.text_input("Fenêtre fin test (HH:MM)", key="input_diag_fin")
             
             str_lit.markdown(
                 "<p style='color:red; font-size:0.85em;'>⚠️ Règle de sécurité : Un délai de 10 minutes d'avance/marge de trajet est habituellement préconisé entre deux rendez-vous de lieux différents.</p>", 
