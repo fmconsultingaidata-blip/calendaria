@@ -625,16 +625,17 @@ elif menu == "🔍 Page de Diagnostic Avancé":
         with col_g:
             str_lit.subheader("🛠️ Ajustement des horaires du test")
             
-            if "diag_deb" not in str_lit.session_state:
-                str_lit.session_state.diag_deb = p_data.get("deb_defaut", "09:45")
-            if "diag_fin" not in str_lit.session_state:
-                str_lit.session_state.diag_fin = p_data.get("fin_defaut", "10:30")
+            patient_fingerprint = (
+    p_data.get("nom"), p_data.get("prenom"), p_data.get("jour"),
+    p_data.get("parite"), p_data.get("deb_defaut"), p_data.get("fin_defaut"),
+)
+if str_lit.session_state.get("_diag_synced_for") != patient_fingerprint:
+    str_lit.session_state["input_diag_deb"] = p_data.get("deb_defaut", "09:45")
+    str_lit.session_state["input_diag_fin"] = p_data.get("fin_defaut", "10:30")
+    str_lit.session_state["_diag_synced_for"] = patient_fingerprint
 
-            fenetre_debut_str = str_lit.text_input("Fenêtre début test (HH:MM)", value=str_lit.session_state.diag_deb, key="input_diag_deb")
-            fenetre_fin_str = str_lit.text_input("Fenêtre fin test (HH:MM)", value=str_lit.session_state.diag_fin, key="input_diag_fin")
-            
-            str_lit.session_state.diag_deb = fenetre_debut_str
-            str_lit.session_state.diag_fin = fenetre_fin_str
+fenetre_debut_str = str_lit.text_input("Fenêtre début test (HH:MM)", key="input_diag_deb")
+fenetre_fin_str = str_lit.text_input("Fenêtre fin test (HH:MM)", key="input_diag_fin")
             
             str_lit.markdown(
                 "<p style='color:red; font-size:0.85em;'>⚠️ Règle de sécurité : Un délai de 10 minutes d'avance/marge de trajet est habituellement préconisé entre deux rendez-vous de lieux différents.</p>", 
@@ -887,12 +888,16 @@ elif menu == "🔍 Page de Diagnostic Avancé":
                         """, unsafe_allow_html=True)
                     with col_s2:
                         if str_lit.button("Sélectionner", key=f"btn_choix_trou_{idx_tr}"):
-                            str_lit.session_state.diag_deb = minutes_to_time_str(trou['debut'])
-                            str_lit.session_state.diag_fin = minutes_to_time_str(trou['debut'] + 45)
-                            # Si on sélectionne un créneau d'une autre semaine via la liste, on met aussi à jour la parité du patient si besoin
-                            p_data["parite"] = parite_visualisee
-                            str_lit.success(f"Créneau sélectionné pour le {j_sugg.capitalize()} en Semaine {parite_visualisee} !")
-                            str_lit.rerun()
+    str_lit.session_state["input_diag_deb"] = minutes_to_time_str(trou['debut'])
+    str_lit.session_state["input_diag_fin"] = minutes_to_time_str(trou['debut'] + 45)
+    p_data["parite"] = parite_visualisee
+    str_lit.session_state["_diag_synced_for"] = (
+        p_data.get("nom"), p_data.get("prenom"), p_data.get("jour"),
+        p_data.get("parite"), p_data.get("deb_defaut"), p_data.get("fin_defaut"),
+    )
+    str_lit.success(f"Créneau sélectionné pour le {j_sugg.capitalize()} en Semaine {parite_visualisee} !")
+    str_lit.rerun()
+
             else:
                 str_lit.warning("Aucun créneau de substitution trouvé pour cette parité sur l'ensemble de la semaine.")
 
