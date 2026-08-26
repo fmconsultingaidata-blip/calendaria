@@ -284,7 +284,7 @@ if menu == "📅 Gestion, Multi-Scénarios & Calendrier":
         
         str_lit.markdown(f"**Mode actif :** Affichage des patients réguliers (AB) et des rendez-vous spécifiques **{'Semaine A' if 'Semaine A' in choix_semaine_cal else 'Semaine B'}**.")
 
-        HAUTEUR_TOTALE = 570 
+        HAUTEUR_TOTALE = 580 
         cols_cal_grid = str_lit.columns(5)
 
         base_dep = db.query(models.Lieu).filter_by(est_base_depart=True).first()
